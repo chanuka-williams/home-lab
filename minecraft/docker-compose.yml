@@ -8,10 +8,7 @@ services:
     environment:
       - TZ=${TZ}
     ports:
-      - "8443:8443"        # HTTPS Web UI
-      - "8124:8123"         # Dynmap
-      - "19132:19132/udp"   # Bedrock
-      - "25500-25600:25500-25600" # MC Server Port Range
+      - "${CRAFTY_WEB_UI_PORT}:8443"        # HTTPS Web UI
     volumes:
       - ./crafty-data/backups:/crafty/backups
       - ./crafty-data/logs:/crafty/logs
