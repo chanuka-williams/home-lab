@@ -3,8 +3,6 @@ services:
         container_name: homeassistant
         privileged: true
         restart: unless-stopped
-        env_file:
-            - ../.env
         environment:
             - TZ=${TZ}
         volumes:
