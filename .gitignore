@@ -1,0 +1,23 @@
+# Secret Files
+.env
+**/.env
+
+# Home Assistant Data
+homeassistant/data/
+
+# Nextcloud Data
+nextcloud/data/
+nextcloud/db/
+nextcloud/config/
+
+# Minecraft / Crafty Data
+minecraft/crafty-data/
+minecraft/luckperms-db/
+
+#Nginx
+nginx/certs/
+
+
+**/backups/
+**/logs/
+**/*.db

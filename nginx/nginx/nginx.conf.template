@@ -1,0 +1,49 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    server {
+        listen 8080;
+        server_name ${NEXTCLOUD_DOMAIN};
+
+        add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+
+        location = /.well-known/carddav    { return 301 $scheme://$host/remote.php/dav; }
+        location = /.well-known/caldav     { return 301 $scheme://$host/remote.php/dav; }
+        location = /.well-known/webfinger  { return 301 $scheme://$host/index.php/.well-known/webfinger; }
+        location = /.well-known/nodeinfo   { return 301 $scheme://$host/index.php/.well-known/nodeinfo; }
+
+        location / {
+            proxy_pass http://nextcloud:80/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            client_max_body_size 10G;
+            proxy_buffering off;
+        }
+    }
+
+    server {
+        listen 8443;
+        server_name ${CRAFTY_DOMAIN};
+
+        location / {
+            proxy_pass https://crafty:8443;
+            proxy_ssl_verify off;
+            proxy_ssl_server_name on;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            client_max_body_size 10G;
+        }
+    }
+}

@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mariadb:10.6
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    env_file:
+      - ../.env
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+    networks:
+      - private
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - private
+
+  nextcloud:
+    image: nextcloud
+    container_name: nextcloud
+    restart: always
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ../.env
+    volumes:
+      - ./data:/var/www/html/data
+      - ./config:/var/www/html/config
+    environment:
+      - NC_default_phone_region=GB
+      - NC_maintenance_window_start=1
+
+      - MYSQL_HOST=db
+      - REDIS_HOST=redis
+      - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+      - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+
+      - OVERWRITEPROTOCOL=https
+      - TRUSTED_PROXIES=172.20.0.0/16
+      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
+    networks:
+      - homelab
+      - private
+
+networks:
+  homelab:
+    external: true
+  private:
+    driver: bridge

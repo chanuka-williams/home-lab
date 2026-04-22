@@ -1,0 +1,65 @@
+name: boom-mc
+
+services:
+  crafty:
+    container_name: crafty
+    image: registry.gitlab.com/crafty-controller/crafty-4:4.10.2
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - TZ=${TZ}
+    ports:
+      #- "8443:8443"        # HTTPS Web UI
+      - "8124:8123"         # Dynmap
+      - "19132:19132/udp"   # Bedrock
+      - "25500-25600:25500-25600" # MC Server Port Range
+    volumes:
+      - ./crafty-data/backups:/crafty/backups
+      - ./crafty-data/logs:/crafty/logs
+      - ./crafty-data/servers:/crafty/servers
+      - ./crafty-data/config:/crafty/app/config
+      - ./crafty-data/import:/crafty/import
+    networks:
+      homelab: {}
+      mcnet:
+        ipv4_address: 172.31.50.4
+    depends_on:
+      mysql:
+        condition: service_started
+
+  mysql:
+    container_name: luckperms-db
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${LUCKPERMS_MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${LUCKPERMS_MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${LUCKPERMS_MYSQL_USER}
+      MYSQL_PASSWORD: ${LUCKPERMS_MYSQL_PASSWORD}
+    hostname: luckperms-db
+    volumes:
+      - ./luckperms-db:/var/lib/mysql
+    networks:
+      mcnet:
+        ipv4_address: 172.31.50.3
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:latest
+    container_name: playit-agent
+    restart: always
+    environment:
+      - SECRET_KEY=${PLAYIT_KEY}
+    networks:
+      mcnet:
+        ipv4_address: 172.31.50.2
+
+networks:
+  homelab:
+    external: true
+  mcnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.50.0/24
+
