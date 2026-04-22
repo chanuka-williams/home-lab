@@ -3,8 +3,6 @@ services:
     image: mariadb:10.6
     restart: always
     command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
-    env_file:
-      - ../.env
     volumes:
       - ./db:/var/lib/mysql
     environment:
@@ -28,8 +26,8 @@ services:
     depends_on:
       - db
       - redis
-    env_file:
-      - ../.env
+    ports:
+    - "8080:80"
     volumes:
       - ./data:/var/www/html/data
       - ./config:/var/www/html/config
@@ -44,14 +42,10 @@ services:
       - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
 
       - OVERWRITEPROTOCOL=https
-      - TRUSTED_PROXIES=172.20.0.0/16
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
     networks:
-      - homelab
       - private
 
 networks:
-  homelab:
-    external: true
   private:
     driver: bridge
