@@ -14,8 +14,13 @@ nextcloud/config/
 minecraft/crafty-data/
 minecraft/luckperms-db/
 
-#Nginx
-nginx/certs/
+# Media-Stack
+media-stack/gluetun
+media-stack/jellyfin
+media-stack/media
+media-stack/prowlarr
+media-stack/qbittorrent
+media-stack/radarr
 
 
 **/backups/
