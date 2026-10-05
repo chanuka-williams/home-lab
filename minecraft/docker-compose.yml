@@ -3,7 +3,7 @@ name: boom-mc
 services:
   crafty:
     container_name: crafty
-    image: registry.gitlab.com/crafty-controller/crafty-4:4.10.4
+    image: registry.gitlab.com/crafty-controller/crafty-4:latest
     restart: always
     environment:
       - TZ=${TZ}
