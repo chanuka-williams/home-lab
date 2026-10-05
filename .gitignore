@@ -23,6 +23,9 @@ media-stack/qbittorrent
 media-stack/radarr
 media-stack/sonarr
 
+# Pi-hole
+pihole/etc-pihole
+
 
 **/backups/
 **/logs/
