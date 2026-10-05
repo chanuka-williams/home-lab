@@ -1,0 +1,27 @@
+# More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      # DNS
+      - "53:53/tcp"
+      - "53:53/udp"
+      # Web UI (HTTP / HTTPS - FTL generates a self-signed cert)
+      - "${PIHOLE_HTTP_PORT}:80/tcp"
+      - "${PIHOLE_HTTPS_PORT}:443/tcp"
+      # Uncomment if using Pi-hole as your DHCP server (also needs NET_ADMIN below)
+      #- "67:67/udp"
+    environment:
+      - TZ=${TZ}
+      - FTLCONF_webserver_api_password=${PIHOLE_PASSWORD}
+      # Required when using Docker's default bridge network
+      - FTLCONF_dns_listeningMode=ALL
+    volumes:
+      - ./etc-pihole:/etc/pihole
+    cap_add:
+      # Optional, gives Pi-hole a bit more processing time
+      - SYS_NICE
+      # Only needed if using Pi-hole as your DHCP server
+      #- NET_ADMIN
+    restart: unless-stopped
