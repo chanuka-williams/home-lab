@@ -1,6 +1,6 @@
 # Home Lab
 
-My personal home lab setup, managed with Docker Compose. Each service stack lives in its own directory with its own `docker-compose.yml`, `start.sh`, and `down.sh`.
+My personal home lab setup, managed with Docker Compose. Each service stack lives in its own directory with its own `docker-compose.yml`, `start.sh`, and `down.sh`. All stacks read their configuration from a single shared `.env` file in the repo root.
 
 > ⚠️ **Note:** This setup has been built procedurally over time rather than tested as a clean first-time install from scratch. If you're setting this up fresh, you may hit issues I haven't encountered - PRs and issues welcome.
 
@@ -13,7 +13,8 @@ My personal home lab setup, managed with Docker Compose. Each service stack live
 | [Home Assistant](#home-assistant) | Home automation |
 | [Minecraft](#minecraft) | Crafty controller, LuckPerms DB, Playit tunnel |
 | [Nextcloud](#nextcloud) | File storage, MariaDB, Redis |
-| [Media Stack](#media-stack) | Jellyfin, Radarr, Prowlarr, qBittorrent, Gluetun VPN |
+| [Media Stack](#media-stack) | Jellyfin, Radarr, Sonarr, Prowlarr, FlareSolverr, qBittorrent, Gluetun VPN |
+| [Pi-hole](#pi-hole) | Network-wide DNS ad blocking |
 
 ---
 
@@ -32,7 +33,7 @@ cd home-lab
 cp .env.example .env
 ```
 
-Then fill in the values in `.env`. See [Environment Variables](#environment-variables) below.
+Then fill in the values in `.env`. See [Environment Variables](#environment-variables) below. The `.env` file is git-ignored, so your secrets stay out of the repo.
 
 ### 3. Start a stack
 
@@ -48,7 +49,7 @@ The media stack's `start.sh` will also create the necessary directories before s
 
 ---
 
-## Stacks
+## Stack Details
 
 ### Home Assistant
 
@@ -96,7 +97,7 @@ cd nextcloud && ./start.sh
 
 ### Media Stack
 
-Full media automation stack. Gluetun routes Prowlarr through ProtonVPN (WireGuard). Radarr handles movie automation, qBittorrent handles downloading, and Jellyfin serves everything.
+Full media automation stack. Gluetun routes Prowlarr and FlareSolverr through ProtonVPN (WireGuard). Radarr handles movie automation, Sonarr handles TV automation, qBittorrent handles downloading, and Jellyfin serves everything.
 
 ```bash
 cd media-stack && ./start.sh
@@ -107,15 +108,37 @@ cd media-stack && ./start.sh
 |---|---|
 | Jellyfin | `JELLYFIN_PORT` |
 | Radarr | `RADARR_PORT` |
+| Sonarr | `SONARR_PORT` |
 | Prowlarr | `PROWLARR_PORT` |
+| FlareSolverr | `FLARESOLVERR_PORT` |
 | qBittorrent Web UI | `QBITTORRENT_PORT` |
 
-**Media directory layout:**
+> Prowlarr and FlareSolverr share Gluetun's network, so their ports are published on the `gluetun` container.
+
+---
+
+### Pi-hole
+
+Network-wide DNS ad blocker. Point your router's DNS (or individual devices) at `SERVER_IP` to use it.
+
+```bash
+cd pihole && ./start.sh
 ```
-media-stack/media/
-├── downloads/
-└── movies/
-```
+
+**Ports:**
+| Service | Port |
+|---|---|
+| DNS | `53` (TCP/UDP) |
+| Web UI (HTTP) | `PIHOLE_HTTP_PORT` |
+| Web UI (HTTPS) | `PIHOLE_HTTPS_PORT` |
+
+The admin UI is at `http://<SERVER_IP>:<PIHOLE_HTTP_PORT>/admin`.
+
+> ⚠️ `PIHOLE_PASSWORD` is only applied on first run. Once `pihole/etc-pihole/pihole.toml` exists, change the password with `docker exec -it pihole pihole setpassword`.
+
+> ⚠️ Port 53 must be free on the host. On Ubuntu, `systemd-resolved` usually occupies it. Check with `sudo ss -lntup | grep ':53 '`, and if needed set `DNSStubListener=no` in `/etc/systemd/resolved.conf.d/pihole.conf` and restart `systemd-resolved`.
+
+> 💡 Give the server a static IP or DHCP reservation, since clients (and optionally the host itself) will use that address for DNS. If the host uses Pi-hole, add a secondary DNS server so the host can still resolve names (e.g. to pull images) while the container is down.
 
 ---
 
@@ -148,9 +171,15 @@ Copy `.env.example` to `.env` and fill in the values.
 | `JELLYFIN_PORT` | Jellyfin web UI port |
 | `JELLYFIN_DISCOVERY_PORT` | Jellyfin UDP discovery port (default: `7359`) |
 | `RADARR_PORT` | Radarr web UI port |
+| `SONARR_PORT` | Sonarr web UI port |
 | `PROWLARR_PORT` | Prowlarr web UI port |
+| `FLARESOLVERR_PORT` | FlareSolverr port (container default: `8191`) |
 | `QBITTORRENT_PORT` | qBittorrent web UI port |
 | `QBITTORRENT_TORRENT_PORT` | qBittorrent torrent port (default: `6881`) |
+| **Pi-hole** | |
+| `PIHOLE_PASSWORD` | Pi-hole web UI password (only applied on first run) |
+| `PIHOLE_HTTP_PORT` | Pi-hole web UI HTTP port |
+| `PIHOLE_HTTPS_PORT` | Pi-hole web UI HTTPS port |
 
 ---
 
