@@ -21,6 +21,7 @@ media-stack/media
 media-stack/prowlarr
 media-stack/qbittorrent
 media-stack/radarr
+media-stack/sonarr
 
 
 **/backups/

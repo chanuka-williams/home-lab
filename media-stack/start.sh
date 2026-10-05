@@ -5,10 +5,12 @@ mkdir -p \
   ./gluetun \
   ./prowlarr/config \
   ./radarr/config \
+  ./sonarr/config \
   ./jellyfin/config \
   ./jellyfin/cache \
   ./qbittorrent/config \
-  ./media/downloads \
-  ./media/movies \
+  /mnt/macbox/media/downloads \
+  /mnt/macbox/media/movies \
+  /mnt/macbox/media/tv \
 
 docker compose --env-file ../.env up

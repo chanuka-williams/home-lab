@@ -16,6 +16,7 @@ services:
       - TZ=${TZ}
     ports:
       - "${PROWLARR_PORT}:9696"   # prowlarr
+      - "${FLARESOLVERR_PORT}:8191" # flaresolver
       #- "${QBITTORRENT_PORT}:${QBITTORRENT_PORT}"   # qbittorrent
     volumes:
       - ./gluetun:/gluetun
@@ -37,6 +38,17 @@ services:
       - ./prowlarr/config:/config
     restart: unless-stopped
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr
+    container_name: flaresolverr
+    network_mode: "service:gluetun"   # route through VPN
+    depends_on:
+      - gluetun
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    restart: unless-stopped
+
   radarr:
     container_name: radarr
     image: ghcr.io/hotio/radarr
@@ -49,9 +61,26 @@ services:
       - TZ=${TZ}
     volumes:
       - ./radarr/config:/config
-      - ./media:/media
+      - /mnt/macbox/media:/media
     ports:
       - "${RADARR_PORT}:7878"
+    restart: unless-stopped
+
+  sonarr:
+    container_name: sonarr
+    image: ghcr.io/hotio/sonarr
+    depends_on:
+      - qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=${TZ}
+    volumes:
+      - ./sonarr/config:/config
+      - /mnt/macbox/media:/media
+    ports:
+      - "${SONARR_PORT}:8989"
     restart: unless-stopped
 
   jellyfin:
@@ -70,7 +99,7 @@ services:
       - ./jellyfin/config:/config
       - ./jellyfin/cache:/cache
       - type: bind
-        source: ./media
+        source: /mnt/macbox/media
         target: /media
     restart: unless-stopped
     environment:
@@ -110,5 +139,5 @@ services:
       - "${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}/udp"
     volumes:
       - ./qbittorrent/config:/config
-      - ./media:/media
+      - /mnt/macbox/media:/media
     restart: unless-stopped
