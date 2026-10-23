@@ -7,17 +7,17 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
-      - VPN_SERVICE_PROVIDER=protonvpn
-      - VPN_TYPE=wireguard
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - SERVER_COUNTRIES=United States
-      - FREE_ONLY=on
+      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
       - FIREWALL_OUTBOUND_SUBNETS=${LOCAL_SUBNET}
       - TZ=${TZ}
     ports:
       - "${PROWLARR_PORT}:9696"   # prowlarr
       - "${FLARESOLVERR_PORT}:8191" # flaresolver
-      #- "${QBITTORRENT_PORT}:${QBITTORRENT_PORT}"   # qbittorrent
+      - "${QBITTORRENT_PORT}:${QBITTORRENT_PORT}"   # qbittorrent
     volumes:
       - ./gluetun:/gluetun
     restart: unless-stopped
@@ -108,36 +108,36 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
 
-  # Passing through VPN
-  # qbittorrent:
-  #   image: lscr.io/linuxserver/qbittorrent
-  #   container_name: qbittorrent
-  #   network_mode: "service:gluetun"
-  #   depends_on:
-  #     - gluetun
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - WEBUI_PORT=${QBITTORRENT_PORT}
-  #     - TZ=${TZ}
-  #   volumes:
-  #     - ./qbittorrent/config:/config
-  #     - ./media/downloads:/downloads
-  #   restart: unless-stopped
-
+  #Passing through VPN
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent
     container_name: qbittorrent
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=1000
       - PGID=1000
       - WEBUI_PORT=${QBITTORRENT_PORT}
       - TZ=${TZ}
-    ports:
-      - "${QBITTORRENT_PORT}:${QBITTORRENT_PORT}"
-      - "${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}/tcp"
-      - "${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}/udp"
     volumes:
       - ./qbittorrent/config:/config
       - /mnt/macbox/media:/media
     restart: unless-stopped
+
+  # qbittorrent:
+  #   image: lscr.io/linuxserver/qbittorrent
+  #   container_name: qbittorrent
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - WEBUI_PORT=${QBITTORRENT_PORT}
+  #     - TZ=${TZ}
+  #   ports:
+  #     - "${QBITTORRENT_PORT}:${QBITTORRENT_PORT}"
+  #     - "${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}/tcp"
+  #     - "${QBITTORRENT_TORRENT_PORT}:${QBITTORRENT_TORRENT_PORT}/udp"
+  #   volumes:
+  #     - ./qbittorrent/config:/config
+  #     - /mnt/macbox/media:/media
+  #   restart: unless-stopped
